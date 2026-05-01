@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -21,10 +22,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} antialiased min-h-screen flex flex-col bg-background text-foreground`}>
-        <Header />
-        <main className="flex-1 flex flex-col relative w-full">
-          {children}
-        </main>
+        <AuthProvider>
+          <Header />
+          <main className="flex-1 flex flex-col relative w-full">
+            {children}
+          </main>
+        </AuthProvider>
       </body>
     </html>
   );

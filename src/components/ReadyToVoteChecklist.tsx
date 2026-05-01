@@ -42,9 +42,9 @@ export default function ReadyToVoteChecklist() {
   if (!mounted) return null; // Avoid hydration mismatch
 
   return (
-    <div className="w-full max-w-xl mx-auto bg-card rounded-3xl p-8 border border-border shadow-lg mt-16 relative overflow-hidden">
+    <section aria-labelledby="checklist-heading" className="w-full max-w-xl mx-auto bg-card rounded-3xl p-8 border border-border shadow-lg mt-16 relative overflow-hidden">
       
-      <div className="absolute top-0 left-0 w-full h-1 bg-slate-100 dark:bg-slate-800">
+      <div className="absolute top-0 left-0 w-full h-1 bg-slate-100 dark:bg-slate-800" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label="Checklist completion progress">
         <div 
           className="h-full bg-brand-500 transition-all duration-500 ease-out" 
           style={{ width: `${progress}%` }}
@@ -52,18 +52,20 @@ export default function ReadyToVoteChecklist() {
       </div>
 
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-foreground mb-2">Am I Ready to Vote?</h2>
+        <h2 id="checklist-heading" className="text-2xl font-bold text-foreground mb-2">Am I Ready to Vote?</h2>
         <p className="text-foreground/70">Check off the steps below to ensure you're fully prepared for election day.</p>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-3" role="group" aria-label="Voting preparation steps">
         {ITEMS.map((item) => {
           const isChecked = !!checkedItems[item.id];
           return (
             <button
               key={item.id}
+              role="checkbox"
+              aria-checked={isChecked}
               onClick={() => toggleItem(item.id)}
-              className={`w-full flex items-center p-4 rounded-xl border text-left transition-all ${
+              className={`w-full flex items-center p-4 rounded-xl border text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
                 isChecked 
                   ? "bg-brand-50 border-brand-200 shadow-inner dark:bg-brand-900/30 dark:border-brand-800" 
                   : "bg-card border-border hover:border-brand-300 hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -71,7 +73,7 @@ export default function ReadyToVoteChecklist() {
             >
               <div className={`flex items-center justify-center w-6 h-6 rounded-full mr-4 shrink-0 transition-colors ${
                 isChecked ? "bg-brand-500 text-white" : "border-2 border-slate-300 text-transparent"
-              }`}>
+              }`} aria-hidden="true">
                 {isChecked ? <Check size={14} strokeWidth={3} /> : <Circle size={14} className="opacity-0" />}
               </div>
               <span className={`font-medium ${isChecked ? "text-brand-900 line-through opacity-70" : "text-foreground"}`}>
@@ -83,10 +85,10 @@ export default function ReadyToVoteChecklist() {
       </div>
 
       {progress === 100 && (
-        <div className="mt-6 p-4 rounded-xl bg-accent-50 border border-accent-200 text-accent-700 text-center font-bold animate-in fade-in zoom-in duration-500">
+        <div role="status" aria-live="polite" className="mt-6 p-4 rounded-xl bg-accent-50 border border-accent-200 text-accent-700 text-center font-bold animate-in fade-in zoom-in duration-500">
           🎉 Awesome! You are 100% ready to vote. 
         </div>
       )}
-    </div>
+    </section>
   );
 }

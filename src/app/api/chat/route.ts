@@ -1,7 +1,20 @@
 import { GoogleGenerativeAI, Schema, SchemaType } from "@google/generative-ai";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 const apiKey = process.env.GEMINI_API_KEY;
+
+// Zod schema for input validation
+const MessageSchema = z.object({
+  id: z.string().optional(),
+  role: z.enum(["user", "assistant"]),
+  content: z.string().min(1).max(2000), // Prevent massive payload attacks
+  quickReplies: z.array(z.string()).optional(),
+});
+
+const ChatRequestSchema = z.object({
+  messages: z.array(MessageSchema).min(1),
+});
 
 const systemPrompt = `You are the Election Guide Assistant.
 Purpose: Help users understand the election process, registration steps, important dates, required documents, polling booth guidance, voting eligibility, FAQs, and reminders.
@@ -49,13 +62,22 @@ export async function POST(req: Request) {
       );
     }
 
-    const { messages } = await req.json();
-
-    if (!messages || !Array.isArray(messages)) {
-      return NextResponse.json({ error: "Invalid messages format" }, { status: 400 });
+    const jsonBody = await req.json();
+    
+    // Zod Input Validation
+    const validationResult = ChatRequestSchema.safeParse(jsonBody);
+    
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: "Invalid input", details: validationResult.error.format() }, 
+        { status: 400 }
+      );
     }
 
+    const { messages } = validationResult.data;
+
     const genAI = new GoogleGenerativeAI(apiKey);
+
     
     // We use gemini-2.5-flash as it's the recommended model for chat
     const model = genAI.getGenerativeModel({
@@ -68,12 +90,16 @@ export async function POST(req: Request) {
     });
 
     // Convert frontend messages to Gemini format
-    // Filter out initial welcome message if it doesn't fit the strict "user/model" pattern perfectly,
-    // but typically we can map "user" -> "user" and "assistant" -> "model"
-    const history = messages.slice(0, -1).map((msg: any) => ({
+    // The Gemini SDK requires history to start with a 'user' message.
+    let history = messages.slice(0, -1).map((msg: any) => ({
       role: msg.role === "user" ? "user" : "model",
       parts: [{ text: msg.content }],
     }));
+
+    // If the history starts with a 'model' message (like the initial greeting), remove it
+    if (history.length > 0 && history[0].role === "model") {
+      history.shift();
+    }
 
     const currentMessage = messages[messages.length - 1].content;
 

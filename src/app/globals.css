@@ -59,3 +59,10 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
 }
+
+/* Accessibility: Keyboard Navigation */
+*:focus-visible {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: 2px;
+}
+
